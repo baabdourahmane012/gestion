@@ -1,9 +1,9 @@
-import tkinter
 import sqlite3
-from tkinter import Entry, ttk, Label, Button, filedialog, Listbox, messagebox
-from stock import gestion_stock
-from param import *
+import tkinter
+from tkinter import ttk, Label, filedialog, messagebox
 
+from param import *
+from stock import gestion_stock
 
 instance_stock = None
 modifieur, ajouteur, ajouts, quantite, mont = [None for _ in range(5)]
@@ -74,49 +74,50 @@ class BaseDeDonnee(tkinter.Toplevel):
                 # Ajouteur
                 def ajouteur():
                     # global ajouterElement
-                    data = []
-                    entrees = []
+                    data_stcok = []
+                    les_entrees = []
                     # nomProd, qteProd, prixProd, mtnProd = None, None, None, None
                     
                     def ajouterElement():
                         
-                        conn = sqlite3.connect(f"{self.fichier_bd}")
-                        cur = conn.cursor()
+                        connexion = sqlite3.connect(f"{self.fichier_bd}")
+                        curs = connexion.cursor()
                         if len(ajouts) != 0:
                             for ligne in ajouts:
-                                cur.execute(
+                                curs.execute(
                                     """INSERT INTO articles (nomProduit, quantiteProduit, prixUnitaire, montantTotal) 
                                     VALUES (?, ?, ?, ?)
                                     """, (ligne[0], ligne[1], ligne[2], ligne[3]))
-                            conn.commit()
-                        conn.close()
+                            connexion.commit()
+                        connexion.close()
                         
                         messagebox.showinfo(parent=instance_stock, title="Sauvegarde",
                                             message="Sauvegarder avec succes.")
 
-                    for widget in instance_stock.winfo_children():
-                        if "entry" in widget.widgetName:
-                            if widget.get() != "":
-                                if widget.get().isnumeric():
-                                    data.append(f"{int(widget.get()):,}")
+                    for widget_stock in instance_stock.winfo_children():
+                        if "entry" in widget_stock.widgetName:
+                            if widget_stock.get() != "":
+                                if widget_stock.get().isnumeric():
+                                    data_stcok.append(f"{int(widget_stock.get()):,}")
                                 else:
-                                    data.append(widget.get())
-                                entrees.append(widget)
+                                    data_stcok.append(widget_stock.get())
+                                les_entrees.append(widget_stock)
                                 for autre_widget in instance_stock.winfo_children():
                                     if "button" in autre_widget.widgetName and autre_widget.cget('text') == 'OK':
                                         autre_widget.config(command=ajouterElement, text='Enregistrer')
                             else:
                                 instance_stock.bell()
 
-                    if len(data) != 0:
+                    if len(data_stcok) != 0:
                         instance_stock.tree.tag_configure("evenrow", background=LIGHTGREY)
                         instance_stock.tree.tag_configure("oddrow", background=LIGHTCYAN)
-                        tags = ("evenrow",) if instance_stock.ligne % 2 == 0 else ("oddrow",)
-                        # qte = int(f"{''.join(data[1].split(','))}")
-                        montant = int(f"{''.join(data[1].split(','))}") * int(f"{''.join(data[2].split(','))}")
+                        tags_stock = ("evenrow",) if instance_stock.ligne % 2 == 0 else ("oddrow",)
+                        # qte = int(f"{''.join(data_stcok[1].split(','))}")
+                        montant = int(f"{''.join(data_stcok[1].split(','))}") * int(
+                            f"{''.join(data_stcok[2].split(','))}")
                         instance_stock.tree.insert('', 'end', text=instance_stock.ligne, values=(
-                            data[0], data[1], data[2], f'{montant:,}'), tags=tags)
-                        nomProd, qteProd, prixProd, mtnProd = data[0], data[1], data[2], montant
+                            data_stcok[0], data_stcok[1], data_stcok[2], f'{montant:,}'), tags=tags_stock)
+                        nomProd, qteProd, prixProd, mtnProd = data_stcok[0], data_stcok[1], data_stcok[2], montant
                         ajouts.append([
                             nomProd,
                             int(''.join(qteProd.split(','))),
@@ -126,9 +127,9 @@ class BaseDeDonnee(tkinter.Toplevel):
                         mont.append(ajouts[instance_stock.index][3])
                         quantite.append(ajouts[instance_stock.index][1])
 
-                        entrees[0].delete(0, len(entrees[0].get()))
-                        entrees[1].delete(0, len(entrees[1].get()))
-                        entrees[2].delete(0, len(entrees[2].get()))
+                        les_entrees[0].delete(0, len(les_entrees[0].get()))
+                        les_entrees[1].delete(0, len(les_entrees[1].get()))
+                        les_entrees[2].delete(0, len(les_entrees[2].get()))
                         instance_stock.ligne += 1
                         
                         # Ouvrir une connexion sqlite3 pour recalculer la qte totale et le montant total
@@ -136,48 +137,38 @@ class BaseDeDonnee(tkinter.Toplevel):
                             con = sqlite3.connect(f"{self.fichier_bd}")
                             cur = con.cursor()
                             cur.execute("SELECT * FROM articles")
-                            data = cur.fetchall()
-                            qte_totale, mtn_total = [], []
-                            for d in data:
-                                qte_totale.append(d[2])
-                                mtn_total.append(d[4])
+                            data_stcok = cur.fetchall()
+                            qte_totale_article, mtn_total_article = [], []
+                            for d in data_stcok:
+                                qte_totale_article.append(d[2])
+                                mtn_total_article.append(d[4])
                             con.close()
                             
-                            # print("data:", data)
-                            # print("Avant append - QTE:", qte_totale)
-                            # qte_totale.append(qte)
-                            # print("Qte total: ", qte_totale + quantite)
-                            # print("Mtn total:", mtn_total + mont)
-                            # mtn_total.append(montant)
-                            # print("Apres append - QTE:", qte_totale)
-                            # print("Nouvel QTE dans ajouts:", ajouts[instance_stock.index][1])
-                            # print("Ajouts:", ajouts)
-                            # print("Index:", instance_stock.index)
                             instance_stock.index += 1
 
-                            BaseDeDonnee.qte, BaseDeDonnee.mtn = qte_totale + quantite, mtn_total  + mont                          
+                            BaseDeDonnee.qte, BaseDeDonnee.mtn = qte_totale_article + quantite, mtn_total_article + mont
                             # Label quantite totale
                             c = " "*50
                             clean_lab_qte = Label(instance_stock.zone, background=CYAN, text=f'{c}')
                             clean_lab_qte.place(x=90, y=2)
                             
-                            temp_lab_qte = Label(instance_stock.zone, background=CYAN,
-                                                 text=f'{sum(BaseDeDonnee.qte):<20,}')
-                            temp_lab_qte.place(x=90, y=2)
+                            temp_lab_qte_article1 = Label(instance_stock.zone, background=CYAN,
+                                                          text=f'{sum(BaseDeDonnee.qte):<20,}')
+                            temp_lab_qte_article1.place(x=90, y=2)
                             # Label montant total
                             clean_lab_mtn = Label(instance_stock.zone, background=CYAN, text=f'{c}')
                             clean_lab_mtn.place(x=90, y=27)
                             
-                            temp_lab_mtn = Label(instance_stock.zone, background=CYAN,
-                                                 text=f'{sum(BaseDeDonnee.mtn):<20,}FCFA')
-                            temp_lab_mtn.place(x=90, y=27)
-                            temp_lab_mtn.forget()
+                            temp_lab_mtn_article1 = Label(instance_stock.zone, background=CYAN,
+                                                          text=f'{sum(BaseDeDonnee.mtn):<20,}FCFA')
+                            temp_lab_mtn_article1.place(x=90, y=27)
+                            temp_lab_mtn_article1.forget()
 
                 # Parcourir les widgets
                 for widget in instance_stock.winfo_children():
-                    # chercher les widget de type Button
+                    # chercher les widget_stock de type Button
                     if "button" in widget.widgetName:
-                        # chercher les widget de type Button avec des noms specifiques
+                        # chercher les widget_stock de type Button avec des noms specifiques
                         if widget.cget('text') == "Enregistrer":
                             widget.config(text="OK")
                             widget.config(command=instance_stock.destroy)
@@ -199,7 +190,8 @@ class BaseDeDonnee(tkinter.Toplevel):
                     def editer():
                         global entrees, id_tree
                         id_tree = instance_stock.tree.item(id_selectionner, "text")
-                        entrees = [widget for widget in instance_stock.winfo_children() if "entry" in widget.widgetName]
+                        entrees = [widget_entrees for widget_entrees in instance_stock.winfo_children()
+                                   if "entry" in widget_entrees.widgetName]
 
                         instance_stock.tree.item(item_id,
                                                  values=((instance_stock.tree.item(item_id, "values")[0],
@@ -219,73 +211,76 @@ class BaseDeDonnee(tkinter.Toplevel):
                                                                    instance_stock.tree.item(item_id, "values")[1],
                                                                    instance_stock.tree.item(item_id, "values")[2],
                                                                    instance_stock.tree.item(item_id, "values")[3])))
-                        # Vider les entrees apres validation de la modification
-                        # for data in entrees:
-                        #     data.delete(0, len(data.get()))
-                        # print('editer')
                         # ## Mettre a jour la base de donnee apres modification de la Treeview
                         if self.fichier_bd is not None:
-                            conn = sqlite3.connect(f'{self.fichier_bd}')
+                            conn_modifieur = sqlite3.connect(f'{self.fichier_bd}')
                             if self.fichier_bd:
-                                # Cre le curseur
-                                cur = conn.cursor()
+                                # Cre le curseur_modifieur
+                                cur = conn_modifieur.cursor()
                                 entree = iter(entrees)
-                                cur.execute("UPDATE articles SET nomProduit = ? WHERE id = ?", (entree.__next__().get(), int(id_tree)))
-                                cur.execute("UPDATE articles SET quantiteProduit = ? WHERE id = ?", (str("".join((entree.__next__().get()).split(','))), int(id_tree)))
-                                cur.execute("UPDATE articles SET prixUnitaire = ? WHERE id = ?", (str("".join((entree.__next__().get()).split(','))), int(id_tree)))
-                                cur.execute("UPDATE articles SET montantTotal = ? WHERE id = ?", (int("".join((entrees[1].get()).split(',')))*int("".join((entrees[2].get()).split(','))), int(id_tree)))
-                                conn.commit()
-                                conn.close()
+                                cur.execute("UPDATE articles SET nomProduit = ? WHERE id = ?",
+                                            (entree.__next__().get(), int(id_tree)))
+                                cur.execute("UPDATE articles SET quantiteProduit = ? WHERE id = ?",
+                                            (str("".join((entree.__next__().get()).split(','))), int(id_tree)))
+                                cur.execute("UPDATE articles SET prixUnitaire = ? WHERE id = ?",
+                                            (str("".join((entree.__next__().get()).split(','))), int(id_tree)))
+                                cur.execute("UPDATE articles SET montantTotal = ? WHERE id = ?",
+                                            (int("".join((entrees[1].get()).split(',')))*int(
+                                                "".join((entrees[2].get()).split(','))), int(id_tree)))
+                                conn_modifieur.commit()
+                                conn_modifieur.close()
             
-                                # Vider les entrees apres validation de la modification
-                                for data in entrees:
-                                    data.delete(0, len(data.get()))
+                                # Vider les les_entrees apres validation de la modification
+                                for data_valide in entrees:
+                                    data_valide.delete(0, len(data_valide.get()))
 
                                 # Nouvelle connexion
-                                conn = sqlite3.connect(f'{self.fichier_bd}')
-                                curseur = conn.cursor()
-                                curseur.execute(f"SELECT * FROM articles")
-                                data = curseur.fetchall()
-                                qte_totale, mtn_total = [], []
-                                for colonne in data:
-                                    qte_totale.append(colonne[2])
-                                    mtn_total.append(colonne[4])
-                                conn.close()
+                                conn_modifieur = sqlite3.connect(f'{self.fichier_bd}')
+                                curseur_modifieur = conn_modifieur.cursor()
+                                curseur_modifieur.execute(f"SELECT * FROM articles")
+                                data_valide = curseur_modifieur.fetchall()
+                                qte_totale_article_modifier, mtn_total_article_modifier = [], []
+                                for colonne in data_valide:
+                                    qte_totale_article_modifier.append(colonne[2])
+                                    mtn_total_article_modifier.append(colonne[4])
+                                conn_modifieur.close()
 
-                                BaseDeDonnee.qte, BaseDeDonnee.mtn = qte_totale, mtn_total                           
+                                BaseDeDonnee.qte = qte_totale_article_modifier
+                                BaseDeDonnee.mtn = mtn_total_article_modifier
                                 # Label quantite totale
                                 c = " "*50
                                 clean_lab_qte = Label(instance_stock.zone, background=CYAN, text=f'{c}')
                                 clean_lab_qte.place(x=90, y=2)
                                 
-                                temp_lab_qte = Label(instance_stock.zone, background=CYAN, text=f'{sum(BaseDeDonnee.qte):<20,}')
-                                temp_lab_qte.place(x=90, y=2)
+                                temp_lab_qte_article = Label(instance_stock.zone, background=CYAN,
+                                                             text=f'{sum(BaseDeDonnee.qte):<20,}')
+                                temp_lab_qte_article.place(x=90, y=2)
                                 # Label montant total
                                 clean_lab_mtn = Label(instance_stock.zone, background=CYAN, text=f'{c}')
                                 clean_lab_mtn.place(x=90, y=27)
                                 
-                                temp_lab_mtn = Label(instance_stock.zone, background=CYAN, text=f'{sum(BaseDeDonnee.mtn):<20,}FCFA')
-                                temp_lab_mtn.place(x=90, y=27)
-                                temp_lab_mtn.forget()
+                                temp_lab_mtn_article = Label(instance_stock.zone, background=CYAN,
+                                                             text=f'{sum(BaseDeDonnee.mtn):<20,}FCFA')
+                                temp_lab_mtn_article.place(x=90, y=27)
+                                temp_lab_mtn_article.forget()
                     
-                    for widget in instance_stock.winfo_children():
-                        # chercher les widget de type Entry
-                        if "entry" in widget.widgetName:
-                            widget.config(state="normal")
-                            print(widget.widgetName)
-                            if widget.get() is not None:
-                                widget.delete(0, len(widget.get()))
+                    for widget_entry in instance_stock.winfo_children():
+                        # chercher les widget_stock de type Entry
+                        if "entry" in widget_entry.widgetName:
+                            widget_entry.config(state="normal")
+                            print(widget_entry.widgetName)
+                            if widget_entry.get() is not None:
+                                widget_entry.delete(0, len(widget_entry.get()))
                                 try:
-                                    widget.insert('end', "".join(entries.__next__().split(',')))
+                                    widget_entry.insert('end', "".join(entries.__next__().split(',')))
                                 except StopIteration:
-                                    widget.bell()
-                        elif "button" in widget.widgetName:
-                            widget.config(state='normal')
-                            if widget.cget('text') == 'Modifier':
-                                widget.config(command=editer)
+                                    widget_entry.bell()
+                        elif "button" in widget_entry.widgetName:
+                            widget_entry.config(state='normal')
+                            if widget_entry.cget('text') == 'Modifier':
+                                widget_entry.config(command=editer)
                                 print(instance_stock.tree.item(item_id, "values"))
 
-                    
                 instance_stock.tree.bind('<Double-1>', modifieur)
 
                 # Ouvrir le fichier de base de donnees
@@ -307,7 +302,9 @@ class BaseDeDonnee(tkinter.Toplevel):
                         instance_stock.tree.tag_configure("evenrow", background=LIGHTGREY)
                         instance_stock.tree.tag_configure("oddrow", background=LIGHTCYAN)
                         tags = ("evenrow",) if instance_stock.ligne % 2 == 0 else ("oddrow",)
-                        instance_stock.tree.insert("", "end", text=str(valeurs[0]), values=(valeurs[1], f'{valeurs[2]:,}', f'{valeurs[3]:,}', f'{valeurs[4]:,}'), tags=tags)
+                        instance_stock.tree.insert("", "end", text=str(valeurs[0]),
+                                                   values=(valeurs[1], f'{valeurs[2]:,}',
+                                                           f'{valeurs[3]:,}', f'{valeurs[4]:,}'), tags=tags)
                         instance_stock.ligne += 1
                         qte_totale.append(valeurs[2])
                         mtn_total.append(valeurs[4])

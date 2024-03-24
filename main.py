@@ -1,13 +1,9 @@
 # -*- encoding: utf-8 -*-
-import os
 import tkinter
 from param import *
 from tkinter import Label, Button, PhotoImage
 from vente import gestion_vente
 from achat import gestion_achat
-# from stock import gestion_stock
-# from parametrage import gestion_parametrage
-# from comptabilite import gestion_comptabilite
 from stock import connexion_bd
 from commande import gestion_commande
 
@@ -101,40 +97,7 @@ class App(tkinter.Tk):
                          font=(BTN_FONT_TYPE, 15, 'normal', 'underline'), command=startCommande, relief='groove')
         command.place(x=385-25, y=400)
         command.config(image=commande_image)
-    
-    """
-    # Menu parametrage
-    def setParametrage(self, parametrage_img=None):
-        global instance_parametrage
-        instance_parametrage = None
 
-        def startParametrage():
-            global instance_parametrage
-            if instance_parametrage is None or not instance_parametrage.winfo_exists():
-                instance_parametrage = gestion_parametrage.Parametrage(self, self.titre)
-                instance_parametrage.focus()
-            
-        parametrage = Button(self, text="Parametrage", background=LIGHTGREEN, command=startParametrage, padx=0, pady=47,
-                             font=(BTN_FONT_TYPE, 15, 'normal', 'underline'), relief='groove')
-        parametrage.place(x=45, y=250)
-        parametrage.config(image=parametrage_img)
-    
-    # Menu comptabilite
-    def setComptabilite(self, comptabilite_img=None):
-        global instance_compta
-        instance_compta = None
-
-        def startComptabilite():
-            global instance_compta
-            if instance_compta is None or not instance_compta.winfo_exists():
-                instance_compta = gestion_comptabilite.Comptabilite(self, self.titre)
-                instance_compta.focus()
-            
-        comptabilite = Button(self, text="Compta", background=LIGHTGREEN, command=startComptabilite, padx=28, pady=47,
-                              font=(BTN_FONT_TYPE, 15, 'normal', 'underline'), relief='groove')
-        comptabilite.place(x=45, y=400)
-        comptabilite.config(image=comptabilite_img)
-    """
     # Make buttons
     def setButtons(self, stock_image, achat_image, vente_image, commande_image):
         self.setStock(stock_image)
@@ -145,25 +108,11 @@ class App(tkinter.Tk):
         # self.setComptabilite()
 
 
-def appEnCours():
-    return os.path.exists("app_en_cours.lock")
-
-
-def creerFichierLock():
-    with open("app_en_cours.lock", "w") as fichier:
-        fichier.write("")
-    
-
 if __name__ == '__main__':
-    if appEnCours():
-        pass
-    else:
-        creerFichierLock()
-        app = App()
-        stock_img = PhotoImage(file="icons/stock.png")
-        achat_img = PhotoImage(file="icons/achat.png")
-        vente_img = PhotoImage(file="icons/vente.png")
-        commande_img = PhotoImage(file="icons/commande.png")
-        app.setButtons(stock_img, achat_img, vente_img, commande_img)
-        app.mainloop()
-        os.remove("app_en_cours.lock")
+    app = App()
+    stock_img = PhotoImage(file="icons/stock.png")
+    achat_img = PhotoImage(file="icons/achat.png")
+    vente_img = PhotoImage(file="icons/vente.png")
+    commande_img = PhotoImage(file="icons/commande.png")
+    app.setButtons(stock_img, achat_img, vente_img, commande_img)
+    app.mainloop()
